@@ -364,6 +364,13 @@ async function main(): Promise<void> {
 			res.json({ status: 'ok', authenticated: Boolean(db.getTokens()) });
 		});
 
+		// MCP OAuth 2.0 Protected Resource metadata — required for Claude Custom Connectors
+		app.get('/.well-known/oauth-protected-resource', (req: Request, res: Response) => {
+			const host = req.get('host') ?? 'localhost';
+			const resource = `https://${host}`;
+			res.json({ resource, authorization_servers: [] });
+		});
+
 		app.all('/mcp', async (req: Request, res: Response) => {
 			const sessionId = req.headers['mcp-session-id'] as string | undefined;
 
@@ -394,7 +401,7 @@ async function main(): Promise<void> {
 					await server.connect(transport);
 				}
 
-				await transport.handleRequest(req, res);
+				await transport.handleRequest(req, res, req.body);
 				return;
 			}
 
